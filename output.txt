@@ -1,0 +1,16 @@
+def dijkstra(GRAPH, j):
+    D = {p:float('+inf') for p in range(len(GRAPH))}
+    D[j] = 0
+    c = set()
+    while len(c) != len(GRAPH):
+        nd = float('+inf')
+        for V in GRAPH:
+            if D[V] < nd:
+                nd = D[V]
+                N = V
+            for hbour in GRAPH[N]:
+                e = D[N] + GRAPH[N][hbour]
+                if e < D[hbour]:
+                    D[hbour] = e
+            c.add(N)
+    return D

@@ -1,0 +1,16 @@
+def dijkstra(graph, start):
+    d = {i:float('+inf') for i in range(len(graph))}
+    d[start] = 0
+    used = set()
+    while len(used) != len(graph):
+        mind = float('+inf')
+        for v in graph:
+            if d[v] < mind:
+                mind = d[v]
+                current = v
+            for neighbour in graph[current]:
+                l = d[current] + graph[current][neighbour]
+                if l < d[neighbour]:
+                    d[neighbour] = l
+            used.add(current)
+    return d

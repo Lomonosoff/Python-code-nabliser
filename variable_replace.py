@@ -10,7 +10,7 @@ def what_to_do(text, i, do_something, reason):
             if do_something:
                 do_something = False
                 reason = '#'
-        elif text[i] == '\n' and reason == '#':
+        elif text[i] == '\n' and reason in {'#', 'import'}:
             do_something = True
         elif text[i] == '"':
             if do_something:
@@ -25,12 +25,15 @@ def what_to_do(text, i, do_something, reason):
                     reason = "'''"
                 elif not do_something and reason == "'''":
                     do_something = True
-            elif text[i:i+3] != "'":
+            elif text[i:i+3] != "'''":
                 if do_something:
                     do_something = False
                     reason = "'"
                 elif not do_something and reason == "'":
                     do_something = True
+    if text[i:i+6] == 'import' or text[i:i+4] == 'from':
+        do_something = False
+        reason = 'import'
     return do_something, reason
 
 
@@ -55,18 +58,20 @@ def get_variables_info(text):
                         var = text[ind:end + 1]
                         if (var in info and var not in keywords and not var.isdigit()
                                 and not text[end+1] == '('):
-                            info[var].add(ind - 1)
+                            if not ((text[ind - 1] == '.' or text[end + 1] == '.') and var not in info):
+                                info[var].add(ind - 1)
                         else:
                             if (var not in keywords and not var.isdigit()
                                     and not text[end+1] == '('):
-                                info[var] = {ind - 1}
+                                if not ((text[ind - 1] == '.' or text[end + 1] == '.') and var not in info):
+                                    info[var] = {ind - 1}
                         break
     return info
 
 
 def get_random_var(var, used):
-    a = random.choice([0, 1, 2])
     while True:
+        a = random.choice([0, 1, 2])
         newvar = var
         if a == 0:
             newvar = one_symbol()

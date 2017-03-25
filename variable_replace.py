@@ -4,13 +4,13 @@ import keyword
 
 
 def what_to_do(text, i, do_something, reason):
-    urgent = {'"', "'", '#', '\n'}
+    urgent = {'"', "'", '#', '\n', '@'}
     if text[i] in urgent:
         if text[i] == '#':
             if do_something:
                 do_something = False
                 reason = '#'
-        elif text[i] == '\n' and reason in {'#', 'import'}:
+        elif text[i] == '\n' and reason in {'#', 'extra', '@'}:
             do_something = True
         elif text[i] == '"':
             if do_something:
@@ -31,10 +31,42 @@ def what_to_do(text, i, do_something, reason):
                     reason = "'"
                 elif not do_something and reason == "'":
                     do_something = True
-    if text[i:i+6] == 'import' or text[i:i+4] == 'from':
+        elif text[i] == '@':
+            do_something = False
+            reason = '@'
+    if (text[i:i+7] == 'import ' or text[i:i+5] == 'from ' or text[i:i+6] == 'class ') and text[i-1] in {' ', '\n'}:
         do_something = False
-        reason = 'import'
+        reason = 'extra'
     return do_something, reason
+
+
+def is_in_brackets(sym, left, is_in):
+    if sym == '(':
+        is_in = True
+        left += 1
+    elif sym == ')':
+        left -= 1
+        if left == 0:
+            is_in = False
+    return left, is_in
+
+
+def is_pos_arg(text, end, is_in, keywords, var):
+    if is_in:
+        i = end
+        while True:
+            i += 1
+            if text[i] == ' ':
+                continue
+            elif text[i] == '=':
+                if text[i + 1] == '=':
+                    return False
+                else:
+                    keywords |= {var}
+                    return True
+            else:
+                return False
+    return False
 
 
 def get_variables_info(text):
@@ -45,9 +77,12 @@ def get_variables_info(text):
     text = ' ' + text
     do_something = True
     reason = None
+    left = 0
+    is_in = False
     for i in range(len(text)):
         (do_something, reason) = what_to_do(text, i, do_something, reason)
         if do_something:
+            (left, is_in) = is_in_brackets(text[i], left, is_in)
             if text[i] not in special and text[i-1] in special:
                 ind = i
                 end = i
@@ -59,12 +94,14 @@ def get_variables_info(text):
                         if (var in info and var not in keywords and not var.isdigit()
                                 and not text[end+1] == '('):
                             if not ((text[ind - 1] == '.' or text[end + 1] == '.') and var not in info):
-                                info[var].add(ind - 1)
+                                if not is_pos_arg(text, end, is_in, keywords, var):
+                                    info[var].add(ind - 1)
                         else:
                             if (var not in keywords and not var.isdigit()
                                     and not text[end+1] == '('):
                                 if not ((text[ind - 1] == '.' or text[end + 1] == '.') and var not in info):
-                                    info[var] = {ind - 1}
+                                    if not is_pos_arg(text, end, is_in, keywords, var):
+                                        info[var] = {ind - 1}
                         break
     return info
 

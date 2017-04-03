@@ -71,7 +71,7 @@ def is_pos_arg(text, end, is_in, keywords, var):
 
 def get_variables_info(text):
     special = set(string.punctuation) | {'\n', ' ', '\t', '\v'}
-    keywords = set(keyword.kwlist) | {'self', 'other'}
+    keywords = set(keyword.kwlist) | {'self', 'other', 'int', 'float', 'str', 'list'}
     special.remove('_')
     info = {}
     text = ' ' + text
